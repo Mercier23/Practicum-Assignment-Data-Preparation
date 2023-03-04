@@ -1,0 +1,254 @@
+---
+title: 'Practicum Assignment: Data Preparation'
+author: "Coles Mercier"
+date: "`r Sys.Date()`"
+output:
+   html_document:
+    theme:
+      bootswatch: "yeti"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+```
+
+## Instructions
+
+For this practicum, you will select one of the projects below and 'prepare' the data. Brief Description: You will retrieve, load and clean the data. Using R, you will find and fix errors in the data. You will produce visualizations to aid in your identification of errors. Due: End of week 8
+
+The readxl package is a useful package in R for importing data from Excel files. It provides a simple and efficient way to read data from Excel files, including support for reading data from specific worksheets and specifying column and row ranges.
+
+```{r include=FALSE}
+library(readxl)
+```
+
+## Read in the Excel file
+
+The code snippet *excel_file \<- read_excel("presidential_polls_2020.xlsx", sheet = NULL, col_names = TRUE)* was used to import the Excel file named "presidential_polls_2020.xlsx" into R, with the first row of the data being treated as the column names.
+
+However, it's worth noting that running this code can sometimes result in lengthy "warnings" due to issues such as missing values or formatting inconsistencies in the Excel file. As a result, I choose not to display the output of the code, even though it successfully imported the data into R.
+
+```{r include=FALSE}
+excel_file <- read_excel("presidential_polls_2020.xlsx", sheet = NULL, col_names = TRUE)
+```
+
+```{r include=FALSE}
+my_sheet1 <- read_excel("presidential_polls_2020.xlsx", sheet = "Sheet1")
+my_sheet2 <- read_excel("presidential_polls_2020.xlsx", sheet = "Sheet2")
+```
+
+## Combine Datafiles
+
+By using the **rbind()** function, I was able to combine two data frames together, since both of them share the same column names and data types. The resulting data frame contains all of the rows from both data frames. The code used to accomplish this is shown below:
+
+```{r, include =TRUE}
+combined_data <- rbind(my_sheet1, my_sheet2)
+```
+
+## Clean Data
+
+I used the **glimpse()** function to display a compact summary of the data set. When **glimpse()** is used, it displays a preview of the data, including the number of rows and columns, the data types of each column, and a few sample values from each column. This is useful for getting a quick overview of the data and for checking whether the data is correct and variables are in the expected format.See code used immediately below:
+
+```{r echo=TRUE}
+glimpse(combined_data)
+```
+
+In order to examine the structure of a data object, I utilized the **str()** function. This function provides a comprehensive summary of the object's structure, including details such as its dimensions (i.e., the number of rows and columns), the number of levels for factors, and the class of each column. By using **str()**, it becomes easier to obtain a rapid overview of the data and verify that the data is accurate and that variables are in the anticipated format. The code used to accomplish this is displayed below:
+
+```{r echo=TRUE}
+str(combined_data$startdate)
+```
+
+```{r echo=TRUE}
+str(combined_data)
+```
+
+I utilized the **complete.cases()** function to identify and remove missing values (NA) from the data set. This function returns a logical vector that indicates which rows in a data frame are complete, meaning that they contain no missing values. By negating this vector using the ! operator, I can obtain a logical vector that is TRUE for incomplete rows (i.e., those that contain missing values) and FALSE for complete rows. This enabled me to easily filter out the incomplete rows. The code used to accomplish this is displayed below:
+
+```{r echo=TRUE}
+sum(!complete.cases(combined_data))
+```
+
+In order to remove rows with missing values, I used the **na.omit()** function. This function removes any rows that contain missing values and returns a new data frame with only the complete cases. By doing so, I was able to eliminate missing data and obtain a more accurate representation of the data set. The code used to accomplish this is displayed below:
+
+```{r echo=TRUE}
+complete_data <- na.omit(combined_data)
+```
+
+I used **complete.cases()** function again to assure there are no more missing values (NA). The code used to accomplish this is displayed below:
+
+```{r echo=TRUE}
+sum(!complete.cases(complete_data))
+```
+
+```{r echo=TRUE}
+str(combined_data$modeldate)
+```
+
+I converted the Excel model date column to R dates by using the **as.Date()** function. This function is designed to convert a string or numeric value into a date object in R. By doing so, it becomes easier to manipulate and analyze the dates, such as sorting them by date or calculating the time difference between dates. This conversion was necessary to ensure that the date data is in the appropriate format for subsequent analyses. The code used to accomplish this is displayed below:
+
+```{r echo=TRUE}
+complete_data$modeldate <- as.Date(complete_data$modeldate, origin = "1899-12-30")
+```
+
+```{r echo=TRUE}
+str(combined_data$startdate)
+```
+
+In order to convert the start date column to R dates, I first had to convert the column to integers. This was necessary in order to properly convert the data into date format. By doing so, it becomes easier to manipulate and analyze the dates, such as sorting them by date or calculating the time difference between dates. This conversion was necessary to ensure that the date data is in the appropriate format for subsequent analyses. The code used to accomplish this is displayed below:
+
+```{r echo=TRUE}
+complete_data$startdate <- as.integer(complete_data$startdate)
+```
+
+```{r echo=TRUE}
+complete_data$startdate <- as.Date(complete_data$startdate, origin = "1899-12-30")
+```
+
+```{r echo=TRUE}
+str(combined_data$enddate)
+
+```
+
+Converted the Excel "enddate" column to R dates. The code used to accomplish this is displayed below:
+
+```{r echo=TRUE}
+complete_data$enddate <- as.Date(complete_data$enddate, origin = "1899-12-30")
+```
+
+In order to remove row 145 from the data set due to the "startdate" column having an NA value in one of the fields, I used the following code snippet: **complete_data \<- complete_data[-145,]**. It's important to note that running this code repeatedly would continue to delete row 145 each time, which could lead to unintended consequences. Therefore, once I was satisfied with the final data set, I chose not to run this code any further.
+
+```{r eval=FALSE, include=FALSE}
+complete_data <- complete_data[-145,]
+```
+
+In order to remove row 28 from the data set due to the "startdate" column having an NA value in one of the fields, I used the following code snippet: **complete_data \<- complete_data[-28,]**. It's important to note that running this code repeatedly would continue to delete row 145 each time, which could lead to unintended consequences. Therefore, once I was satisfied with the final data set, I chose not to run this code any further.
+
+```{r eval=FALSE, include=FALSE}
+complete_data <- complete_data[-28,]
+```
+
+Replaced all elements in the "cycle" column of the complete_data data frame that are equal to '20' with the value 2020. This step was necessary to standardize the cycle column of the complete_data data frame. By doing this, I ensure that all observations are using the same naming convention, which can avoid issues during analysis or visualization. The code used to accomplish this is displayed below:  
+
+```{r echo=TRUE}
+complete_data$cycle[complete_data$cycle=='20'] <-2020
+```
+
+This table displays the contents of the State column prior to cleanup. The code used to accomplish this is displayed below:
+
+```{r echo=TRUE}
+library(knitr)
+state_counts <- as.data.frame(table(combined_data$state))
+state_counts <- select(state_counts, State = Var1, Count = Freq)
+kable(state_counts, format = "markdown", align = "c", caption = "Initial Name and Counts of States in the Presidential Polls 2020 Dataset")
+```
+
+Changed "WY" to "Wyoming" to standardize the names of states in the state column of the complete_data data frame. By doing this, I ensure that all observations are using the same naming convention, which can avoid issues during analysis or visualization.  The code used to accomplish this is displayed below:
+
+```{r echo=TRUE}
+complete_data$state[complete_data$state=="WY"] <- "Wyoming"
+```
+
+Changed "WI" to "Wisconsin" to standardize the names of states in the state column of the complete_data data frame. By doing this, I ensure that all observations are using the same naming convention, which can avoid issues during analysis or visualization.  . The code used to accomplish this is displayed below:
+
+```{r echo=TRUE}
+complete_data$state[complete_data$state=="WI"] <- "Wisconsin"
+```
+
+Changed "NATl" to "National" to standardize the names of states in the state column of the complete_data data frame. By doing this, I ensure that all observations are using the same naming convention, which can avoid issues during analysis or visualization.  . The code used to accomplish this is displayed below:
+
+```{r echo=TRUE}
+complete_data$state[complete_data$state=="NATl"] <- "National"
+```
+
+I used the **table()** function primarily to display the corrected state names in the state column.
+
+```{r echo=TRUE}
+table(complete_data$state)
+```
+
+Changed "Biden" to "Joseph R. Biden Jr" to standardize the names of states in the state column of the complete_data data frame. By doing this, I ensure that all observations are using the same naming convention, which can avoid issues during analysis or visualization. The code used to accomplish this is displayed below:
+
+```{r echo=TRUE}
+complete_data$candidate_name[complete_data$candidate_name=="Biden"] <- "Joseph R. Biden Jr."
+```
+
+Changed "Survey Monkey" to "SurveyMonkey" to standardize the names of states in the state column of the complete_data data frame. By doing this, I ensure that all observations are using the same naming convention, which can avoid issues during analysis or visualization. The code used to accomplish this is displayed below:
+
+```{r echo=TRUE}
+complete_data$pollster[complete_data$pollster=="Survey Monkey"] <- "SurveyMonkey"
+```
+
+Changed "Morning Consult" to "MorningConsult" to standardize the names of states in the state column of the complete_data data frame. By doing this, I ensure that all observations are using the same naming convention, which can avoid issues during analysis or visualization. The code used to accomplish this is displayed below:
+
+```{r echo=TRUE}
+complete_data$pollster[complete_data$pollster=="Morning Consult"] <- "MorningConsult"
+```
+
+Changed "Morning Con" to "MorningConsult" to standardize the names of states in the state column of the complete_data data frame. By doing this, I ensure that all observations are using the same naming convention, which can avoid issues during analysis or visualization. The code used to accomplish this is displayed below:
+
+```{r echo=TRUE}
+complete_data$pollster[complete_data$pollster=="Morning Con"] <- "MorningConsult"
+```
+
+I filtered the data by removing rows where the value in the sample size column was less than 2. There were 4 rows that had a sample size of only 1, which is considered an outlier and likely a mistake. The code used to accomplish this is displayed below:
+
+```{r echo=TRUE}
+complete_data <- complete_data[complete_data$samplesize >= 2, ]
+```
+
+I used the **summary()** function to generate summary statistics of the data set. These statistics can give me a sense of the distribution of the sample sizes and any potential outliers. The code used to accomplish this is displayed below:
+
+```{r echo=TRUE}
+summary(complete_data$samplesize)
+```
+
+## Visual-1:
+
+The chart provides a visual representation of the differences in sample sizes across the two pollsters during the 2020 campaign for Joseph R. Biden Jr. It is worth noting that despite efforts to remove it, the chart may still display "NA", which is not actually present in the data set.
+
+```{r echo=TRUE}
+ggplot(complete_data, aes(x = pollster, y = samplesize, fill = pollster)) + 
+  geom_bar(position = "dodge", stat = "identity") +
+  scale_y_continuous(limits = c(0, max(complete_data$samplesize) + 1000), expand = c(0, 0))+
+  xlab("Pollster")+
+  ylab("Sample Size") + labs(title = "Polling Totals per Pollster", caption = "Resource: www.fivethirtyeight.com") +
+  theme_minimal() +
+  guides(fill = FALSE)
+```
+
+## Visual-2:
+
+The chart provides a visual representation of the differences in sample sizes across the states during the 2020 campaign for Joseph R. Biden Jr.
+
+```{r echo=TRUE}
+ggplot(complete_data, aes(x = samplesize, y = state, fill = state)) + 
+  geom_bar(position = "dodge", stat = "identity")+
+  xlab("Sample Size")+
+  ylab("States") + labs(title = "Sample Size Totals per State", caption = "Resource: www.fivethirtyeight.com") +
+  theme_minimal() +
+  guides(fill = FALSE)
+```
+
+## Visual-3:
+
+This chart displays the total sample size for the 2020 Campaign for Joseph R. Biden Jr over time. It is worth noting that the highest sample sizes occurred between approximately mid-September to mid-October.
+
+```{r echo=TRUE}
+ggplot(complete_data, aes(x = enddate, y = samplesize, fill = enddate)) + geom_area(color = "white") +  
+  xlab("End Date")+
+  ylab("Sample Size") + labs(title = "Sample Size Totals by End Date", caption = "Resource: www.fivethirtyeight.com") +
+  theme_minimal() +
+  guides(fill = FALSE)
+```
+
+```{r echo=TRUE}
+save(complete_data, file = "complete_data.RData")
+
+```
